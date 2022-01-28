@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+    creationTimestamp: null
+    labels:
+        io.kompose.service: symfony-k8s-postgresql-pv-prod
+    name: symfony-k8s-postgresql-pv-prod
+spec:
+    storageClassName: manual
+    persistentVolumeReclaimPolicy: Retain # Recreate or Retain
+    capacity:
+        storage: 4Gi
+    accessModes:
+        - ReadWriteOnce
+    hostPath:
+        path: /data/postgresql
+

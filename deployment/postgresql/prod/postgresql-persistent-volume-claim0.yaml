@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    creationTimestamp: null
+    labels:
+        io.kompose.service: symfony-k8s-postgresql-pvc0-prod
+    name: symfony-k8s-postgresql-pvc0-prod
+spec:
+    storageClassName: manual
+    accessModes:
+        - ReadWriteOnce
+    resources:
+        requests:
+            storage: 2Gi
+status: {}

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+    creationTimestamp: null
+    labels:
+        io.kompose.service: symfony-k8s-web
+    name: symfony-k8s-web
+spec:
+    ports:
+        -   name: "9000"
+            port: 9000
+            targetPort: 9000
+        -   name: "22"
+            port: 22
+            targetPort: 22
+        -   name: "80"
+            protocol: TCP
+            port: 80
+            targetPort: 80
+    externalIPs:
+        - 1.2.4.100
+    selector:
+        io.kompose.service: symfony-k8s-web
+status:
+    loadBalancer: {}

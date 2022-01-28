@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+    creationTimestamp: null
+    labels:
+        io.kompose.service: symfony-k8s-web-pv
+    name: symfony-k8s-web-pv
+spec:
+    storageClassName: manual
+    persistentVolumeReclaimPolicy: Recycle
+    capacity:
+        storage: 4Gi
+    accessModes:
+        - ReadWriteMany
+    hostPath:
+        path: /data/web
+

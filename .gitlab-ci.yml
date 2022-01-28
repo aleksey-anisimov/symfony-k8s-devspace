@@ -1,0 +1,26 @@
+image: docker:stable
+
+stages:
+    - testing
+    - deploy
+
+testing:
+    stage: testing
+    script:
+        - apk add bash
+        - chmod +x -R ./scripts/*
+        - /bin/bash ./scripts/install_env.sh
+        - /bin/bash ./scripts/configure_kubectl.sh
+        - /bin/bash ./scripts/run_remote_testing.sh
+
+deploy_staging:
+    stage: deploy
+    script:
+        - apk add bash
+        - chmod +x -R ./scripts/*
+        - /bin/bash ./scripts/install_env.sh
+        - /bin/bash ./scripts/configure_kubectl.sh
+        - devspace deploy --profile=staging --kube-context=staging --namespace=staging --no-warn
+        - /bin/bash ./scripts/deploy_staging.sh
+    only:
+        - staging

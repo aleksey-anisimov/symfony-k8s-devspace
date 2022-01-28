@@ -1,0 +1,161 @@
+version: v1beta11
+
+vars:
+    -   name: PHP
+        value: registry-url/symfony-k8s-php
+    -   name: POSTGRESQL
+        value: postgres
+    -   name: NGINX
+        value: registry-url/symfony-k8s-nginx
+
+deployments:
+    -   name: symfony-k8s
+        kubectl:
+            manifests:
+                - deployment/**
+                - deployment/web/dev/**
+                - deployment/postgresql/dev/**
+
+images:
+    PHP:
+        image: ${PHP}
+        dockerfile: ./docker/php/dev/Dockerfile
+        context: ./
+        createPullSecret: true
+        rebuildStrategy: ignoreContextChanges # for dev env
+        build:
+            docker:
+                preferMinikube: true # if true do in minikube docker daemon
+                skipPush: true # skip pushing to registry
+                useBuildKit: false
+    NGINX:
+        image: ${NGINX}
+        dockerfile: ./docker/nginx/dev/Dockerfile
+        context: ./
+        createPullSecret: true
+        rebuildStrategy: ignoreContextChanges # for dev env
+        build:
+            docker:
+                preferMinikube: true # if true do in minikube docker daemon
+                skipPush: true # skip pushing to registry
+                useBuildKit: false
+
+# `dev` only applies when you run `devspace dev`
+dev:
+    ports:
+        -   imageSelector: ${NGINX}
+            forward:
+                -   port: 8888
+                    remotePort: 80
+        -   imageSelector: ${PHP}
+            forward:
+                -   port: 2222
+                    remotePort: 22
+            reverseForward:
+                -   port: 9003
+                    remotePort: 9003
+        -   imageSelector: ${POSTGRESQL}
+            forward:
+                -   port: 5432
+                    remotePort: 5432
+
+
+    # `dev.open` tells DevSpace to open certain URLs as soon as they return HTTP status 200
+    # Since we configured port-forwarding, we can use a localhost address here to access our application
+    #    open:
+    #        -   url: http://127.0.0.1:8888
+
+    # `dev.sync` configures a file sync between our Pods in k8s and your local project files
+    sync:
+        -   imageSelector: ${PHP}
+            containerPath: /var/www/symfony
+            localSubPath: ./
+            excludePaths:
+                - .git/
+                - ./docker
+                - .idea
+            initialSync: mirrorLocal
+            waitInitialSync: true
+
+    terminal:
+        imageSelector: ${PHP}
+
+profiles:
+    -   name: testing
+        patches:
+            -   op: replace
+                path: images.PHP.dockerfile
+                value: ./docker/php/testing/Dockerfile
+            -   op: replace
+                path: images.PHP.build.docker.skipPush
+                value: false
+            -   op: replace
+                path: images.NGINX.dockerfile
+                value: ./docker/nginx/testing/Dockerfile
+            -   op: replace
+                path: images.NGINX.build.docker.skipPush
+                value: false
+            -   op: remove
+                path: deployments[0].kubectl.manifests[2] # deployment/postgresql/dev/**
+            -   op: remove
+                path: deployments[0].kubectl.manifests[1] # deployment/web/dev/**
+            -   op: add
+                path: deployments[0].kubectl.manifests
+                value: deployment/web/testing/**
+            -   op: add
+                path: deployments[0].kubectl.manifests
+                value: deployment/postgresql/testing/**
+            -   op: remove
+                path: images.PHP.rebuildStrategy
+            -   op: remove
+                path: images.NGINX.rebuildStrategy
+    -   name: local-testing
+        patches:
+            -   op: replace
+                path: images.PHP.dockerfile
+                value: ./docker/php/testing/Dockerfile
+            -   op: replace
+                path: images.NGINX.dockerfile
+                value: ./docker/nginx/testing/Dockerfile
+            -   op: remove
+                path: deployments[0].kubectl.manifests[2] # deployment/postgresql/dev/**
+            -   op: remove
+                path: deployments[0].kubectl.manifests[1] # deployment/web/dev/**
+            -   op: add
+                path: deployments[0].kubectl.manifests
+                value: deployment/web/testing/**
+            -   op: add
+                path: deployments[0].kubectl.manifests
+                value: deployment/postgresql/testing/**
+            -   op: remove
+                path: images.PHP.rebuildStrategy
+            -   op: remove
+                path: images.NGINX.rebuildStrategy
+    -   name: staging
+        patches:
+            -   op: replace
+                path: images.PHP.dockerfile
+                value: ./docker/php/prod/Dockerfile
+            -   op: replace
+                path: images.PHP.build.docker.skipPush
+                value: false
+            -   op: replace
+                path: images.NGINX.dockerfile
+                value: ./docker/nginx/prod/Dockerfile
+            -   op: replace
+                path: images.NGINX.build.docker.skipPush
+                value: false
+            -   op: remove
+                path: deployments[0].kubectl.manifests[2] # deployment/postgresql/dev/**
+            -   op: remove
+                path: deployments[0].kubectl.manifests[1] # deployment/web/dev/**
+            -   op: add
+                path: deployments[0].kubectl.manifests
+                value: deployment/web/prod/**
+            -   op: add
+                path: deployments[0].kubectl.manifests
+                value: deployment/postgresql/prod/**
+            -   op: remove
+                path: images.PHP.rebuildStrategy
+            -   op: remove
+                path: images.NGINX.rebuildStrategy

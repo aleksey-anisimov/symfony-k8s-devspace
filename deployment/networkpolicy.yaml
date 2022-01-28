@@ -1,0 +1,14 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+    creationTimestamp: null
+    name: symfony-k8s
+spec:
+    ingress:
+        -   from:
+                -   podSelector:
+                        matchLabels:
+                            io.kompose.network/symfony-k8s: "true"
+    podSelector:
+        matchLabels:
+            io.kompose.network/symfony-k8s: "true"
