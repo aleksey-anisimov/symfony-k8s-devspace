@@ -1,6 +1,7 @@
 start:
 	minikube start --driver docker --memory 4096 --cpus 4 --profile minikube
 	devspace purge --kube-context=minikube --namespace=symfony-k8s-dev --no-warn # because you should run 'devspace dev' once
+	rm -rf var/cache/*
 	devspace dev --kube-context=minikube --namespace=symfony-k8s-dev --no-warn --ui=false --skip-push=true --print-sync=false
 
 stop:
